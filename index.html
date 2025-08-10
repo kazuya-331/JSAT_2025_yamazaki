@@ -229,7 +229,7 @@ function updateLSIRadar() {
   const labels=lsiVariables.map(v=>v.replace(/（/g,'(').replace(/）/g,')'));
   const avg=lsiVariables.map(v=>averageLSI[v]);
   const datasets=[];
-  individualLSIData.forEach(p=>{datasets.push({label:`患者${p.patientId}`,data:lsiVariables.map(v=>p[v]),borderColor:p.gender==='M'?'#93c5fd':'#fbb6ce',backgroundColor:p.gender==='M'?'rgba(147,197,253,0.1)':'rgba(251,182,206,0.1)',borderWidth:1,pointRadius:2});});
+  individualLSIData.forEach(p=>{datasets.push({label:`選手${p.patientId}`,data:lsiVariables.map(v=>p[v]),borderColor:p.gender==='M'?'#93c5fd':'#fbb6ce',backgroundColor:p.gender==='M'?'rgba(147,197,253,0.1)':'rgba(251,182,206,0.1)',borderWidth:1,pointRadius:2});});
   datasets.push({label:'全体平均',data:avg,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.2)',borderWidth:3,pointRadius:6,pointBackgroundColor:'#ef4444'});
   charts.radar=new Chart(ctx,{type:'radar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:true,min:0,max:150,ticks:{stepSize:30}}},plugins:{legend:{position:'bottom',labels:{filter:(li)=>li.text==='全体平均'}}}}});
   const stats=document.getElementById('lsi-stats');
