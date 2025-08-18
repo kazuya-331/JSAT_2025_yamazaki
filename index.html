@@ -4,59 +4,38 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>膝前十字靭帯再建術後選手における膝関節等速性筋力とCMJ指標の関係</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 読み込み順の明確化：defer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" defer></script>
+  <script src="https://cdn.tailwindcss.com" defer></script>
+
   <style>
-    /* ---- iOS/モバイル最適化の基礎 ---- */
     html { -webkit-text-size-adjust: 100%; }
     body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 
-    /* ---- タイポグラフィとタップターゲット ---- */
     :root {
-      --tab-pad-y: 10px; /* 指で押しやすい高さ */
-      --tab-pad-x: 14px;
-      --cell-font-sm: 11px;
-      --cell-font-md: 12px;
+      --tab-pad-y: 10px; --tab-pad-x: 14px;
+      --cell-font-sm: 11px; --cell-font-md: 12px;
       --heat-w-sm: 42px; --heat-h-sm: 34px;
       --heat-w-md: 58px; --heat-h-md: 40px;
       --chart-h-sm: 260px; --chart-h-md: 380px; --chart-h-lg: 520px;
     }
+    @media (min-width: 640px) { :root { --tab-pad-y: 10px; --tab-pad-x: 16px; } }
+    @media (min-width: 1024px) { :root { --tab-pad-y: 12px; --tab-pad-x: 20px; } }
 
-    @media (min-width: 640px) { /* sm */
-      :root { --tab-pad-y: 10px; --tab-pad-x: 16px; }
-    }
-    @media (min-width: 1024px) { /* lg */
-      :root { --tab-pad-y: 12px; --tab-pad-x: 20px; }
-    }
-
-    /* ---- グラフコンテナ高さ：画面幅で最適化 ---- */
     .chart-container { position: relative; width: 100%; height: var(--chart-h-md); }
     @media (max-width: 639px) { .chart-container { height: var(--chart-h-sm); } }
     @media (min-width: 1024px) { .chart-container { height: var(--chart-h-lg); } }
 
-    /* ---- タブ（スワイプ可能＆固定） ---- */
-    .tab-strip {
-      position: sticky; top: 0; z-index: 20; background: white; padding: 4px;
-      overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.06);
-    }
+    .tab-strip { position: sticky; top: 0; z-index: 20; background: white; padding: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; box-shadow: 0 1px 0 rgba(0,0,0,0.06); }
     .tab-button { padding: var(--tab-pad-y) var(--tab-pad-x); border-radius: 9999px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; background: transparent; scroll-snap-align: center; white-space: nowrap; }
     .tab-button.active { background-color: #3b82f6; color: white; }
     .tab-button:not(.active) { color: #6b7280; }
     .tab-button:not(.active):active { color: #111827; }
 
-    /* ---- ヒートマップ ---- */
-    .heatmap-cell {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: var(--heat-w-md); height: var(--heat-h-md); margin: 2px;
-      border: 1px solid #e5e7eb; border-radius: 6px; font-variation-settings: "wght" 600;
-      font-size: var(--cell-font-md); user-select: none; -webkit-tap-highlight-color: transparent;
-    }
-    @media (max-width: 639px) {
-      .heatmap-cell { width: var(--heat-w-sm); height: var(--heat-h-sm); font-size: var(--cell-font-sm); }
-    }
+    .heatmap-cell { display: inline-flex; align-items: center; justify-content: center; width: var(--heat-w-md); height: var(--heat-h-md); margin: 2px; border: 1px solid #e5e7eb; border-radius: 6px; font-variation-settings: "wght" 600; font-size: var(--cell-font-md); user-select: none; -webkit-tap-highlight-color: transparent; }
+    @media (max-width: 639px) { .heatmap-cell { width: var(--heat-w-sm); height: var(--heat-h-sm); font-size: var(--cell-font-sm); } }
 
-    /* ---- 表：横スクロール + 重要列の固定 ---- */
     .data-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table.sticky-first th:nth-child(1), table.sticky-first td:nth-child(1) { position: sticky; left: 0; background: #f9fafb; z-index: 1; }
     table.sticky-first th:nth-child(2), table.sticky-first td:nth-child(2) { position: sticky; left: 80px; background: #f9fafb; z-index: 1; }
@@ -64,42 +43,42 @@
       table.sticky-first th:nth-child(2), table.sticky-first td:nth-child(2) { left: 100px; }
     }
 
-    /* ---- iOSキーボード表示時のレイアウト揺れを抑制 ---- */
     input, select, button { font-size: 16px; }
   </style>
 
+  <!-- データのみ先に定義（解析ロジックは defer 後のDOM準備で実行） -->
   <script>
-    /* 受領データそのまま */
-    const data = [/* --- 省略せずに貼り付け --- */
-    {"ID":"A","Side":"Non","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"M","伸展（60deg/sec)":4.179487179,"伸展（180deg/sec)":2.897435897,"屈曲（60deg/sec)":1.731623932,"屈曲（180deg/sec)":1.362393162,"跳躍高(片脚)":24.1,"滞空時間(片脚)":0.48,"減速局面力積(片脚)":1.14,"推進局面力積(片脚)":2.26,"減速局面力積(両足)":0.82,"推進局面力積(両足)":1.72},
-    {"ID":"A","Side":"Injured","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"M","伸展（60deg/sec)":3.358974359,"伸展（180deg/sec)":2.362393162,"屈曲（60deg/sec)":1.682051282,"屈曲（180deg/sec)":1.34017094,"跳躍高(片脚)":17.65,"滞空時間(片脚)":0.41,"減速局面力積(片脚)":1.12,"推進局面力積(片脚)":1.93,"減速局面力積(両足)":0.73,"推進局面力積(両足)":1.34},
-    {"ID":"B","Side":"Non","Ope":"ACLR_BTB","Competition":"スキー/スノーボード","Gender":"M","伸展（60deg/sec)":3.472222222,"伸展（180deg/sec)":2.451388889,"屈曲（60deg/sec)":1.670833333,"屈曲（180deg/sec)":1.354166667,"跳躍高(片脚)":23.39,"滞空時間(片脚)":0.48,"減速局面力積(片脚)":1.05,"推進局面力積(片脚)":2.15,"減速局面力積(両足)":0.79,"推進局面力積(両足)":1.5},
-    {"ID":"B","Side":"Injured","Ope":"ACLR_BTB","Competition":"スキー/スノーボード","Gender":"M","伸展（60deg/sec)":2.841666667,"伸展（180deg/sec)":2.316666667,"屈曲（60deg/sec)":1.4875,"屈曲（180deg/sec)":1.376388889,"跳躍高(片脚)":22.94,"滞空時間(片脚)":0.48,"減速局面力積(片脚)":1.09,"推進局面力積(片脚)":2.14,"減速局面力積(両足)":0.81,"推進局面力積(両足)":1.43},
-    {"ID":"C","Side":"Non","Ope":"ACLR_STG","Competition":"スキー/スノーボード","Gender":"M","伸展（60deg/sec)":3.310751105,"伸展（180deg/sec)":2.288659794,"屈曲（60deg/sec)":1.640648012,"屈曲（180deg/sec)":1.296023564,"跳躍高(片脚)":21.35,"滞空時間(片脚)":0.49,"減速局面力積(片脚)":1.48,"推進局面力積(片脚)":2.09,"減速局面力積(両足)":0.97,"推進局面力積(両足)":1.67},
-    {"ID":"C","Side":"Injured","Ope":"ACLR_STG","Competition":"スキー/スノーボード","Gender":"M","伸展（60deg/sec)":3.539027982,"伸展（180deg/sec)":2.552282769,"屈曲（60deg/sec)":1.583210604,"屈曲（180deg/sec)":1.309278351,"跳躍高(片脚)":20.54,"滞空時間(片脚)":0.42,"減速局面力積(片脚)":1.29,"推進局面力積(片脚)":2.05,"減速局面力積(両足)":0.78,"推進局面力積(両足)":1.3},
-    {"ID":"D","Side":"Non","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"M","伸展（60deg/sec)":3.573684211,"伸展（180deg/sec)":2.697368421,"屈曲（60deg/sec)":1.748684211,"屈曲（180deg/sec)":1.35,"跳躍高(片脚)":24.4,"滞空時間(片脚)":0.5,"減速局面力積(片脚)":1.05,"推進局面力積(片脚)":2.2,"減速局面力積(両足)":0.62,"推進局面力積(両足)":1.63},
-    {"ID":"D","Side":"Injured","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"M","伸展（60deg/sec)":3.339473684,"伸展（180deg/sec)":2.332894737,"屈曲（60deg/sec)":1.152631579,"屈曲（180deg/sec)":0.872368421,"跳躍高(片脚)":20.19,"滞空時間(片脚)":0.45,"減速局面力積(片脚)":1.19,"推進局面力積(片脚)":2.01,"減速局面力積(両足)":0.74,"推進局面力積(両足)":1.33},
-    {"ID":"E","Side":"Non","Ope":"ACLR_STG","Competition":"スキー/スノーボード","Gender":"F","伸展（60deg/sec)":3.295839753,"伸展（180deg/sec)":2.18027735,"屈曲（60deg/sec)":1.311248074,"屈曲（180deg/sec)":0.973805855,"跳躍高(片脚)":12.28,"滞空時間(片脚)":0.35,"減速局面力積(片脚)":0.97,"推進局面力積(片脚)":1.59,"減速局面力積(両足)":0.74,"推進局面力積(両足)":1.33},
-    {"ID":"E","Side":"Injured","Ope":"ACLR_STG","Competition":"スキー/スノーボード","Gender":"F","伸展（60deg/sec)":1.927580894,"伸展（180deg/sec)":1.457627119,"屈曲（60deg/sec)":1.146379045,"屈曲（180deg/sec)":0.850539291,"跳躍高(片脚)":8.3,"滞空時間(片脚)":0.31,"減速局面力積(片脚)":0.81,"推進局面力積(片脚)":1.31,"減速局面力積(両足)":0.71,"推進局面力積(両足)":0.97},
-    {"ID":"F","Side":"Non","Ope":"ACLR_BTB","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":2.790436006,"伸展（180deg/sec)":1.901547117,"屈曲（60deg/sec)":1.340365682,"屈曲（180deg/sec)":1.029535865,"跳躍高(片脚)":10.4,"滞空時間(片脚)":0.34,"減速局面力積(片脚)":1.0,"推進局面力積(片脚)":1.46,"減速局面力積(両足)":0.79,"推進局面力積(両足)":1.28},
-    {"ID":"F","Side":"Injured","Ope":"ACLR_BTB","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":2.450070323,"伸展（180deg/sec)":1.82278481,"屈曲（60deg/sec)":1.338959212,"屈曲（180deg/sec)":0.990154712,"跳躍高(片脚)":8.51,"滞空時間(片脚)":0.32,"減速局面力積(片脚)":1.07,"推進局面力積(片脚)":1.32,"減速局面力積(両足)":0.75,"推進局面力積(両足)":1.07},
-    {"ID":"G","Side":"Non","Ope":"ACLR_BTB","Competition":"球技系","Gender":"F","伸展（60deg/sec)":3.075,"伸展（180deg/sec)":2.078846154,"屈曲（60deg/sec)":1.596153846,"屈曲（180deg/sec)":1.186538462,"跳躍高(片脚)":15.29,"滞空時間(片脚)":0.4,"減速局面力積(片脚)":1.08,"推進局面力積(片脚)":1.84,"減速局面力積(両足)":0.81,"推進局面力積(両足)":1.43},
-    {"ID":"G","Side":"Injured","Ope":"ACLR_BTB","Competition":"球技系","Gender":"F","伸展（60deg/sec)":2.413461538,"伸展（180deg/sec)":1.553846154,"屈曲（60deg/sec)":1.559615385,"屈曲（180deg/sec)":1.215384615,"跳躍高(片脚)":10.93,"滞空時間(片脚)":0.34,"減速局面力積(片脚)":1.01,"推進局面力積(片脚)":1.57,"減速局面力積(両足)":0.87,"推進局面力積(両足)":1.19},
-    {"ID":"H","Side":"Non","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":3.297101449,"伸展（180deg/sec)":2.224637681,"屈曲（60deg/sec)":1.523550725,"屈曲（180deg/sec)":1.130434783,"跳躍高(片脚)":14.32,"滞空時間(片脚)":0.39,"減速局面力積(片脚)":1.18,"推進局面力積(片脚)":1.69,"減速局面力積(両足)":0.8,"推進局面力積(両足)":1.3},
-    {"ID":"H","Side":"Injured","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":2.615942029,"伸展（180deg/sec)":1.737318841,"屈曲（60deg/sec)":1.065217391,"屈曲（180deg/sec)":0.875,"跳躍高(片脚)":10.51,"滞空時間(片脚)":0.33,"減速局面力積(片脚)":1.14,"推進局面力積(片脚)":1.45,"減速局面力積(両足)":0.73,"推進局面力積(両足)":1.19},
-    {"ID":"I","Side":"Non","Ope":"ACLR_STG","Competition":"球技系","Gender":"F","伸展（60deg/sec)":3.089795918,"伸展（180deg/sec)":1.912244898,"屈曲（60deg/sec)":1.344897959,"屈曲（180deg/sec)":0.995918367,"跳躍高(片脚)":12.63,"滞空時間(片脚)":0.37,"減速局面力積(片脚)":1.06,"推進局面力積(片脚)":1.62,"減速局面力積(両足)":0.85,"推進局面力積(両足)":1.36},
-    {"ID":"I","Side":"Injured","Ope":"ACLR_STG","Competition":"球技系","Gender":"F","伸展（60deg/sec)":2.073469388,"伸展（180deg/sec)":1.316326531,"屈曲（60deg/sec)":1.093877551,"屈曲（180deg/sec)":0.895918367,"跳躍高(片脚)":6.3,"滞空時間(片脚)":0.31,"減速局面力積(片脚)":0.98,"推進局面力積(片脚)":1.16,"減速局面力積(両足)":0.67,"推進局面力積(両足)":0.93},
-    {"ID":"J","Side":"Non","Ope":"ACLR_STG","Competition":"球技系","Gender":"F","伸展（60deg/sec)":3.137254902,"伸展（180deg/sec)":2.084313725,"屈曲（60deg/sec)":1.562745098,"屈曲（180deg/sec)":1.119607843,"跳躍高(片脚)":13.04,"滞空時間(片脚)":0.38,"減速局面力積(片脚)":0.93,"推進局面力積(片脚)":1.66,"減速局面力積(両足)":0.92,"推進局面力積(両足)":1.23},
-    {"ID":"J","Side":"Injured","Ope":"ACLR_STG","Competition":"球技系","Gender":"F","伸展（60deg/sec)":2.874509804,"伸展（180deg/sec)":2.045098039,"屈曲（60deg/sec)":1.225490196,"屈曲（180deg/sec)":0.943137255,"跳躍高(片脚)":11.82,"滞空時間(片脚)":0.35,"減速局面力積(片脚)":1.03,"推進局面力積(片脚)":1.58,"減速局面力積(両足)":0.76,"推進局面力積(両足)":1.1},
-    {"ID":"K","Side":"Non","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":3.148325359,"伸展（180deg/sec)":2.054226475,"屈曲（60deg/sec)":1.416267943,"屈曲（180deg/sec)":1.146730463,"跳躍高(片脚)":9.78,"滞空時間(片脚)":0.31,"減速局面力積(片脚)":1.02,"推進局面力積(片脚)":1.42,"減速局面力積(両足)":0.87,"推進局面力積(両足)":1.14},
-    {"ID":"K","Side":"Injured","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":2.88676236,"伸展（180deg/sec)":1.968102073,"屈曲（60deg/sec)":1.213716108,"屈曲（180deg/sec)":0.98245614,"跳躍高(片脚)":8.2,"滞空時間(片脚)":0.28,"減速局面力積(片脚)":1.12,"推進局面力積(片脚)":1.3,"減速局面力積(両足)":0.7,"推進局面力積(両足)":1.03},
-    {"ID":"L","Side":"Non","Ope":"ACLR_BTB","Competition":"記録系","Gender":"F","伸展（60deg/sec)":3.020689655,"伸展（180deg/sec)":1.767241379,"屈曲（60deg/sec)":2.018965517,"屈曲（180deg/sec)":1.715517241,"跳躍高(片脚)":20.89,"滞空時間(片脚)":0.46,"減速局面力積(片脚)":0.82,"推進局面力積(片脚)":2.06,"減速局面力積(両足)":0.61,"推進局面力積(両足)":1.45},
-    {"ID":"L","Side":"Injured","Ope":"ACLR_BTB","Competition":"記録系","Gender":"F","伸展（60deg/sec)":2.343103448,"伸展（180deg/sec)":1.824137931,"屈曲（60deg/sec)":1.839655172,"屈曲（180deg/sec)":1.648275862,"跳躍高(片脚)":18.57,"滞空時間(片脚)":0.43,"減速局面力積(片脚)":0.88,"推進局面力積(片脚)":1.96,"減速局面力積(両足)":0.58,"推進局面力積(両足)":1.34},
-    {"ID":"M","Side":"Non","Ope":"ACLR_BTB","Competition":"球技系","Gender":"F","伸展（60deg/sec)":3.305172414,"伸展（180deg/sec)":2.35862069,"屈曲（60deg/sec)":1.510344828,"屈曲（180deg/sec)":1.170689655,"跳躍高(片脚)":17.03,"滞空時間(片脚)":0.39,"減速局面力積(片脚)":1.21,"推進局面力積(片脚)":1.93,"減速局面力積(両足)":1.02,"推進局面力積(両足)":1.48},
-    {"ID":"M","Side":"Injured","Ope":"ACLR_BTB","Competition":"球技系","Gender":"F","伸展（60deg/sec)":2.213793103,"伸展（180deg/sec)":1.75862069,"屈曲（60deg/sec)":1.255172414,"屈曲（180deg/sec)":1.032758621,"跳躍高(片脚)":11.89,"滞空時間(片脚)":0.32,"減速局面力積(片脚)":1.03,"推進局面力積(片脚)":1.61,"減速局面力積(両足)":0.55,"推進局面力積(両足)":1.18}
+    const data = [
+      {"ID":"A","Side":"Non","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"M","伸展（60deg/sec)":4.179487179,"伸展（180deg/sec)":2.897435897,"屈曲（60deg/sec)":1.731623932,"屈曲（180deg/sec)":1.362393162,"跳躍高(片脚)":24.1,"滞空時間(片脚)":0.48,"減速局面力積(片脚)":1.14,"推進局面力積(片脚)":2.26,"減速局面力積(両足)":0.82,"推進局面力積(両足)":1.72},
+      {"ID":"A","Side":"Injured","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"M","伸展（60deg/sec)":3.358974359,"伸展（180deg/sec)":2.362393162,"屈曲（60deg/sec)":1.682051282,"屈曲（180deg/sec)":1.34017094,"跳躍高(片脚)":17.65,"滞空時間(片脚)":0.41,"減速局面力積(片脚)":1.12,"推進局面力積(片脚)":1.93,"減速局面力積(両足)":0.73,"推進局面力積(両足)":1.34},
+      {"ID":"B","Side":"Non","Ope":"ACLR_BTB","Competition":"スキー/スノーボード","Gender":"M","伸展（60deg/sec)":3.472222222,"伸展（180deg/sec)":2.451388889,"屈曲（60deg/sec)":1.670833333,"屈曲（180deg/sec)":1.354166667,"跳躍高(片脚)":23.39,"滞空時間(片脚)":0.48,"減速局面力積(片脚)":1.05,"推進局面力積(片脚)":2.15,"減速局面力積(両足)":0.79,"推進局面力積(両足)":1.5},
+      {"ID":"B","Side":"Injured","Ope":"ACLR_BTB","Competition":"スキー/スノーボード","Gender":"M","伸展（60deg/sec)":2.841666667,"伸展（180deg/sec)":2.316666667,"屈曲（60deg/sec)":1.4875,"屈曲（180deg/sec)":1.376388889,"跳躍高(片脚)":22.94,"滞空時間(片脚)":0.48,"減速局面力積(片脚)":1.09,"推進局面力積(片脚)":2.14,"減速局面力積(両足)":0.81,"推進局面力積(両足)":1.43},
+      {"ID":"C","Side":"Non","Ope":"ACLR_STG","Competition":"スキー/スノーボード","Gender":"M","伸展（60deg/sec)":3.310751105,"伸展（180deg/sec)":2.288659794,"屈曲（60deg/sec)":1.640648012,"屈曲（180deg/sec)":1.296023564,"跳躍高(片脚)":21.35,"滞空時間(片脚)":0.49,"減速局面力積(片脚)":1.48,"推進局面力積(片脚)":2.09,"減速局面力積(両足)":0.97,"推進局面力積(両足)":1.67},
+      {"ID":"C","Side":"Injured","Ope":"ACLR_STG","Competition":"スキー/スノーボード","Gender":"M","伸展（60deg/sec)":3.539027982,"伸展（180deg/sec)":2.552282769,"屈曲（60deg/sec)":1.583210604,"屈曲（180deg/sec)":1.309278351,"跳躍高(片脚)":20.54,"滞空時間(片脚)":0.42,"減速局面力積(片脚)":1.29,"推進局面力積(片脚)":2.05,"減速局面力積(両足)":0.78,"推進局面力積(両足)":1.3},
+      {"ID":"D","Side":"Non","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"M","伸展（60deg/sec)":3.573684211,"伸展（180deg/sec)":2.697368421,"屈曲（60deg/sec)":1.748684211,"屈曲（180deg/sec)":1.35,"跳躍高(片脚)":24.4,"滞空時間(片脚)":0.5,"減速局面力積(片脚)":1.05,"推進局面力積(片脚)":2.2,"減速局面力積(両足)":0.62,"推進局面力積(両足)":1.63},
+      {"ID":"D","Side":"Injured","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"M","伸展（60deg/sec)":3.339473684,"伸展（180deg/sec)":2.332894737,"屈曲（60deg/sec)":1.152631579,"屈曲（180deg/sec)":0.872368421,"跳躍高(片脚)":20.19,"滞空時間(片脚)":0.45,"減速局面力積(片脚)":1.19,"推進局面力積(片脚)":2.01,"減速局面力積(両足)":0.74,"推進局面力積(両足)":1.33},
+      {"ID":"E","Side":"Non","Ope":"ACLR_STG","Competition":"スキー/スノーボード","Gender":"F","伸展（60deg/sec)":3.295839753,"伸展（180deg/sec)":2.18027735,"屈曲（60deg/sec)":1.311248074,"屈曲（180deg/sec)":0.973805855,"跳躍高(片脚)":12.28,"滞空時間(片脚)":0.35,"減速局面力積(片脚)":0.97,"推進局面力積(片脚)":1.59,"減速局面力積(両足)":0.74,"推進局面力積(両足)":1.33},
+      {"ID":"E","Side":"Injured","Ope":"ACLR_STG","Competition":"スキー/スノーボード","Gender":"F","伸展（60deg/sec)":1.927580894,"伸展（180deg/sec)":1.457627119,"屈曲（60deg/sec)":1.146379045,"屈曲（180deg/sec)":0.850539291,"跳躍高(片脚)":8.3,"滞空時間(片脚)":0.31,"減速局面力積(片脚)":0.81,"推進局面力積(片脚)":1.31,"減速局面力積(両足)":0.71,"推進局面力積(両足)":0.97},
+      {"ID":"F","Side":"Non","Ope":"ACLR_BTB","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":2.790436006,"伸展（180deg/sec)":1.901547117,"屈曲（60deg/sec)":1.340365682,"屈曲（180deg/sec)":1.029535865,"跳躍高(片脚)":10.4,"滞空時間(片脚)":0.34,"減速局面力積(片脚)":1.0,"推進局面力積(片脚)":1.46,"減速局面力積(両足)":0.79,"推進局面力積(両足)":1.28},
+      {"ID":"F","Side":"Injured","Ope":"ACLR_BTB","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":2.450070323,"伸展（180deg/sec)":1.82278481,"屈曲（60deg/sec)":1.338959212,"屈曲（180deg/sec)":0.990154712,"跳躍高(片脚)":8.51,"滞空時間(片脚)":0.32,"減速局面力積(片脚)":1.07,"推進局面力積(片脚)":1.32,"減速局面力積(両足)":0.75,"推進局面力積(両足)":1.07},
+      {"ID":"G","Side":"Non","Ope":"ACLR_BTB","Competition":"球技系","Gender":"F","伸展（60deg/sec)":3.075,"伸展（180deg/sec)":2.078846154,"屈曲（60deg/sec)":1.596153846,"屈曲（180deg/sec)":1.186538462,"跳躍高(片脚)":15.29,"滞空時間(片脚)":0.4,"減速局面力積(片脚)":1.08,"推進局面力積(片脚)":1.84,"減速局面力積(両足)":0.81,"推進局面力積(両足)":1.43},
+      {"ID":"G","Side":"Injured","Ope":"ACLR_BTB","Competition":"球技系","Gender":"F","伸展（60deg/sec)":2.413461538,"伸展（180deg/sec)":1.553846154,"屈曲（60deg/sec)":1.559615385,"屈曲（180deg/sec)":1.215384615,"跳躍高(片脚)":10.93,"滞空時間(片脚)":0.34,"減速局面力積(片脚)":1.01,"推進局面力積(片脚)":1.57,"減速局面力積(両足)":0.87,"推進局面力積(両足)":1.19},
+      {"ID":"H","Side":"Non","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":3.297101449,"伸展（180deg/sec)":2.224637681,"屈曲（60deg/sec)":1.523550725,"屈曲（180deg/sec)":1.130434783,"跳躍高(片脚)":14.32,"滞空時間(片脚)":0.39,"減速局面力積(片脚)":1.18,"推進局面力積(片脚)":1.69,"減速局面力積(両足)":0.8,"推進局面力積(両足)":1.3},
+      {"ID":"H","Side":"Injured","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":2.615942029,"伸展（180deg/sec)":1.737318841,"屈曲（60deg/sec)":1.065217391,"屈曲（180deg/sec)":0.875,"跳躍高(片脚)":10.51,"滞空時間(片脚)":0.33,"減速局面力積(片脚)":1.14,"推進局面力積(片脚)":1.45,"減速局面力積(両足)":0.73,"推進局面力積(両足)":1.19},
+      {"ID":"I","Side":"Non","Ope":"ACLR_STG","Competition":"球技系","Gender":"F","伸展（60deg/sec)":3.089795918,"伸展（180deg/sec)":1.912244898,"屈曲（60deg/sec)":1.344897959,"屈曲（180deg/sec)":0.995918367,"跳躍高(片脚)":12.63,"滞空時間(片脚)":0.37,"減速局面力積(片脚)":1.06,"推進局面力積(片脚)":1.62,"減速局面力積(両足)":0.85,"推進局面力積(両足)":1.36},
+      {"ID":"I","Side":"Injured","Ope":"ACLR_STG","Competition":"球技系","Gender":"F","伸展（60deg/sec)":2.073469388,"伸展（180deg/sec)":1.316326531,"屈曲（60deg/sec)":1.093877551,"屈曲（180deg/sec)":0.895918367,"跳躍高(片脚)":6.3,"滞空時間(片脚)":0.31,"減速局面力積(片脚)":0.98,"推進局面力積(片脚)":1.16,"減速局面力積(両足)":0.67,"推進局面力積(両足)":0.93},
+      {"ID":"J","Side":"Non","Ope":"ACLR_STG","Competition":"球技系","Gender":"F","伸展（60deg/sec)":3.137254902,"伸展（180deg/sec)":2.084313725,"屈曲（60deg/sec)":1.562745098,"屈曲（180deg/sec)":1.119607843,"跳躍高(片脚)":13.04,"滞空時間(片脚)":0.38,"減速局面力積(片脚)":0.93,"推進局面力積(片脚)":1.66,"減速局面力積(両足)":0.92,"推進局面力積(両足)":1.23},
+      {"ID":"J","Side":"Injured","Ope":"ACLR_STG","Competition":"球技系","Gender":"F","伸展（60deg/sec)":2.874509804,"伸展（180deg/sec)":2.045098039,"屈曲（60deg/sec)":1.225490196,"屈曲（180deg/sec)":0.943137255,"跳躍高(片脚)":11.82,"滞空時間(片脚)":0.35,"減速局面力積(片脚)":1.03,"推進局面力積(片脚)":1.58,"減速局面力積(両足)":0.76,"推進局面力積(両足)":1.1},
+      {"ID":"K","Side":"Non","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":3.148325359,"伸展（180deg/sec)":2.054226475,"屈曲（60deg/sec)":1.416267943,"屈曲（180deg/sec)":1.146730463,"跳躍高(片脚)":9.78,"滞空時間(片脚)":0.31,"減速局面力積(片脚)":1.02,"推進局面力積(片脚)":1.42,"減速局面力積(両足)":0.87,"推進局面力積(両足)":1.14},
+      {"ID":"K","Side":"Injured","Ope":"ACLR_STG","Competition":"格闘技系","Gender":"F","伸展（60deg/sec)":2.88676236,"伸展（180deg/sec)":1.968102073,"屈曲（60deg/sec)":1.213716108,"屈曲（180deg/sec)":0.98245614,"跳躍高(片脚)":8.2,"滞空時間(片脚)":0.28,"減速局面力積(片脚)":1.12,"推進局面力積(片脚)":1.3,"減速局面力積(両足)":0.7,"推進局面力積(両足)":1.03},
+      {"ID":"L","Side":"Non","Ope":"ACLR_BTB","Competition":"記録系","Gender":"F","伸展（60deg/sec)":3.020689655,"伸展（180deg/sec)":1.767241379,"屈曲（60deg/sec)":2.018965517,"屈曲（180deg/sec)":1.715517241,"跳躍高(片脚)":20.89,"滞空時間(片脚)":0.46,"減速局面力積(片脚)":0.82,"推進局面力積(片脚)":2.06,"減速局面力積(両足)":0.61,"推進局面力積(両足)":1.45},
+      {"ID":"L","Side":"Injured","Ope":"ACLR_BTB","Competition":"記録系","Gender":"F","伸展（60deg/sec)":2.343103448,"伸展（180deg/sec)":1.824137931,"屈曲（60deg/sec)":1.839655172,"屈曲（180deg/sec)":1.648275862,"跳躍高(片脚)":18.57,"滞空時間(片脚)":0.43,"減速局面力積(片脚)":0.88,"推進局面力積(片脚)":1.96,"減速局面力積(両足)":0.58,"推進局面力積(両足)":1.34},
+      {"ID":"M","Side":"Non","Ope":"ACLR_BTB","Competition":"球技系","Gender":"F","伸展（60deg/sec)":3.305172414,"伸展（180deg/sec)":2.35862069,"屈曲（60deg/sec)":1.510344828,"屈曲（180deg/sec)":1.170689655,"跳躍高(片脚)":17.03,"滞空時間(片脚)":0.39,"減速局面力積(片脚)":1.21,"推進局面力積(片脚)":1.93,"減速局面力積(両足)":1.02,"推進局面力積(両足)":1.48},
+      {"ID":"M","Side":"Injured","Ope":"ACLR_BTB","Competition":"球技系","Gender":"F","伸展（60deg/sec)":2.213793103,"伸展（180deg/sec)":1.75862069,"屈曲（60deg/sec)":1.255172414,"屈曲（180deg/sec)":1.032758621,"跳躍高(片脚)":11.89,"滞空時間(片脚)":0.32,"減速局面力積(片脚)":1.03,"推進局面力積(片脚)":1.61,"減速局面力積(両足)":0.55,"推進局面力積(両足)":1.18}
     ];
   </script>
 </head>
+
 <body class="bg-gray-50 min-h-screen text-[15px] sm:text-base">
   <div class="max-w-7xl mx-auto p-4 sm:p-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 leading-snug">
@@ -111,7 +90,6 @@
     </div>
 
     <div id="main-content" style="display:none;">
-      <!-- タブストリップ（sticky & swipe） -->
       <div class="tab-strip">
         <div class="flex space-x-1">
           <button class="tab-button active" onclick="showTab(event,'healthyinjured')">健側患側比較</button>
@@ -121,7 +99,6 @@
         </div>
       </div>
 
-      <!-- 健患側比較 -->
       <div id="healthyinjured-tab" class="tab-content">
         <div class="space-y-4 sm:space-y-6">
           <div class="flex items-center space-x-3 sm:space-x-4">
@@ -136,7 +113,6 @@
         </div>
       </div>
 
-      <!-- 相関分析 -->
       <div id="correlation-tab" class="tab-content" style="display:none;">
         <div class="space-y-4 sm:space-y-6">
           <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
@@ -156,7 +132,6 @@
         </div>
       </div>
 
-      <!-- LSI -->
       <div id="lsi-tab" class="tab-content" style="display:none;">
         <div class="space-y-4 sm:space-y-6">
           <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
@@ -167,7 +142,6 @@
         </div>
       </div>
 
-      <!-- テーブル -->
       <div id="table-tab" class="tab-content" style="display:none;">
         <div class="space-y-4 sm:space-y-6">
           <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
@@ -195,237 +169,311 @@
     </div>
   </div>
 
-<script>
-let charts = {}; let selectedCorrelation = null;
+  <!-- ロジックは DOM 準備後に実行 -->
+  <script defer>
+  let charts = {}; let selectedCorrelation = null;
 
-const numericColumns = [
-  '伸展（60deg/sec)','伸展（180deg/sec)','屈曲（60deg/sec)','屈曲（180deg/sec)',
-  '跳躍高(片脚)','滞空時間(片脚)','減速局面力積(片脚)','推進局面力積(片脚)','減速局面力積(両足)','推進局面力積(両足)'
-];
-const xAxisColumns = ['伸展（60deg/sec)','伸展（180deg/sec)','屈曲（60deg/sec)','屈曲（180deg/sec)'];
-const yAxisColumns = ['跳躍高(片脚)','滞空時間(片脚)','減速局面力積(片脚)','推進局面力積(片脚)','減速局面力積(両足)','推進局面力積(両足)'];
-const lsiVariables = ['伸展（180deg/sec)','屈曲（180deg/sec)','減速局面力積(片脚)','推進局面力積(片脚)','減速局面力積(両足)','推進局面力積(両足)'];
-
-window.onload = function() {
-  try {
-    initializeUI();
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-  } catch (e) {
-    console.error(e);
-    document.getElementById('loading').innerHTML = '<div class="text-xl text-red-600">初期化中にエラー: ' + e.message + '</div>';
-  }
-};
-
-function showTab(e, tabName) {
-  document.querySelectorAll('.tab-content').forEach(t => t.style.display='none');
-  document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-  document.getElementById(tabName + '-tab').style.display = 'block';
-  e.currentTarget.classList.add('active');
-}
-
-function initializeUI() {
-  const select = document.getElementById('variable-select');
-  numericColumns.forEach(col => { const o = document.createElement('option'); o.value = col; o.textContent = col; select.appendChild(o); });
-  select.value = '伸展（180deg/sec)';
-  updateHealthyInjuredChart();
-  createHeatmap();
-  updateLSIRadar();
-  createDataTable();
-}
-
-function processHealthyInjuredData(variable) {
-  const healthy = data.filter(r=>r.Side==='Non' && typeof r[variable]==='number');
-  const injured = data.filter(r=>r.Side==='Injured' && typeof r[variable]==='number');
-  if(!healthy.length || !injured.length) return {barData:[],healthyData:[],injuredData:[]};
-  const h=healthy.map(r=>r[variable]), i=injured.map(r=>r[variable]);
-  const hm=h.reduce((s,v)=>s+v,0)/h.length, im=i.reduce((s,v)=>s+v,0)/i.length;
-  const hs=Math.sqrt(h.reduce((s,v)=>s+Math.pow(v-hm,2),0)/h.length);
-  const is=Math.sqrt(i.reduce((s,v)=>s+Math.pow(v-im,2),0)/i.length);
-  return { barData:[{name:'健側',value:hm,error:hs},{name:'患側',value:im,error:is}], healthyData:healthy, injuredData:injured };
-}
-
-function updateHealthyInjuredChart() {
-  const variable=document.getElementById('variable-select').value;
-  const p=processHealthyInjuredData(variable);
-  const ctx=document.getElementById('healthyInjuredChart').getContext('2d');
-  if(charts.healthyInjured) charts.healthyInjured.destroy();
-  charts.healthyInjured=new Chart(ctx,{type:'bar',data:{
-    labels:p.barData.map(d=>d.name),
-    datasets:[{label:'平均値',data:p.barData.map(d=>d.value),backgroundColor:['#3b82f6','#ef4444'],borderColor:['#1e40af','#dc2626'],borderWidth:1}]
-  },options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}},plugins:{title:{display:true,text:variable+' 健患側比較'},legend:{display:false}}}});
-  const s=document.getElementById('healthyInjuredStats');
-  s.innerHTML=`
-    <div><h4 class="font-semibold mb-2">統計値</h4>
-      ${p.barData.map(item=>`
-        <div class="flex justify-between p-2 bg-gray-50 rounded mb-1">
-          <span>${item.name}:</span><span class="font-medium">${item.value.toFixed(2)} ± ${item.error.toFixed(2)}</span>
-        </div>`).join('')}
-    </div>
-    <div><h4 class="font-semibold mb-2">データ詳細</h4>
-      <div class="p-2 bg-blue-50 rounded text-xs">
-        <p>健側データ数: ${p.healthyData.length}件</p>
-        <p>患側データ数: ${p.injuredData.length}件</p>
-      </div>
-    </div>`;
-}
-
-function calculateCorrelation(x,y){const n=x.length;if(!n)return 0;const mx=x.reduce((s,v)=>s+v,0)/n,my=y.reduce((s,v)=>s+v,0)/n;const num=x.reduce((s,v,i)=>s+(v-mx)*(y[i]-my),0);const den=Math.sqrt(x.reduce((s,v)=>s+Math.pow(v-mx,2),0)*y.reduce((s,v)=>s+Math.pow(v-my,2),0));return den===0?0:num/den;}
-
-function createHeatmap(){
-  const container=document.getElementById('heatmap-container');
-  let html='<div class="inline-block">';
-  html+='<div class="flex"><div class="w-24 sm:w-32 flex items-center justify-center"><div class="text-[10px] sm:text-xs font-semibold text-gray-700 transform -rotate-90 whitespace-nowrap">CMJ関連データ (Y軸)</div></div><div>';
-  html+='<div class="flex mb-2"><div class="w-24 sm:w-32"></div>';
-  xAxisColumns.forEach(col=>{ html+=`<div class="w-[64px] sm:w-24 text-[10px] sm:text-xs font-medium text-center px-1">${col.replace(/（/g,'(').replace(/）/g,')')}</div>`; });
-  html+='</div>';
-  yAxisColumns.forEach(yCol=>{
-    html+='<div class="flex items-center">';
-    html+=`<div class="w-24 sm:w-32 text-[10px] sm:text-xs font-medium text-right pr-2">${yCol.replace(/（/g,'(').replace(/）/g,')')}</div>`;
-    xAxisColumns.forEach(xCol=>{
-      const valid=data.filter(r=>typeof r[xCol]==='number'&&typeof r[yCol]==='number'&&!isNaN(r[xCol])&&!isNaN(r[yCol]));
-      const vx=valid.map(r=>r[xCol]), vy=valid.map(r=>r[yCol]);
-      const r=calculateCorrelation(vx,vy);
-      const opacity=Math.min(0.85, Math.abs(r)*0.85), color=`rgba(239, 68, 68, ${opacity})`, textColor=Math.abs(r)>0.55?'white':'#111827';
-      html+=`<button class="heatmap-cell" style="background-color:${color};color:${textColor};" onclick="showScatterPlot('${xCol}','${yCol}',${r})" aria-label="${xCol} と ${yCol} の相関 ${r.toFixed(2)}">${r.toFixed(2)}</button>`;
-    });
-    html+='</div>';
-  });
-  html+='</div><div class="text-center mt-2"><div class="text-[10px] sm:text-xs font-semibold text-gray-700">筋力データ (X軸)</div></div></div>';
-  container.innerHTML=html;
-}
-
-function showScatterPlot(xCol,yCol,correlation){
-  selectedCorrelation={colX:xCol,colY:yCol,value:correlation};
-  document.getElementById('scatterplot-container').style.display='block';
-  document.getElementById('scatterplot-title').textContent=`散布図: ${xCol} vs ${yCol}`;
-  const valid=data.filter(r=>typeof r[xCol]==='number'&&typeof r[yCol]==='number'&&!isNaN(r[xCol])&&!isNaN(r[yCol]));
-  const ctx=document.getElementById('scatterChart').getContext('2d');
-  if(charts.scatter) charts.scatter.destroy();
-
-  const basePoint = (window.devicePixelRatio && window.innerWidth < 640) ? 4 : 6;
-  const datasets=[
-    {label:'男性・健側',data:valid.filter(r=>r.Gender==='M'&&r.Side==='Non').map(r=>({x:r[xCol],y:r[yCol],meta:r})),backgroundColor:'#3b82f6',pointRadius:basePoint},
-    {label:'男性・患側',data:valid.filter(r=>r.Gender==='M'&&r.Side==='Injured').map(r=>({x:r[xCol],y:r[yCol],meta:r})),backgroundColor:'#f59e0b',pointRadius:basePoint},
-    {label:'女性・健側',data:valid.filter(r=>r.Gender==='F'&&r.Side==='Non').map(r=>({x:r[xCol],y:r[yCol],meta:r})),backgroundColor:'#10b981',pointRadius:basePoint},
-    {label:'女性・患側',data:valid.filter(r=>r.Gender==='F'&&r.Side==='Injured').map(r=>({x:r[xCol],y:r[yCol],meta:r})),backgroundColor:'#ef4444',pointRadius:basePoint}
+  const numericColumns = [
+    '伸展（60deg/sec)','伸展（180deg/sec)','屈曲（60deg/sec)','屈曲（180deg/sec)',
+    '跳躍高(片脚)','滞空時間(片脚)','減速局面力積(片脚)','推進局面力積(片脚)','減速局面力積(両足)','推進局面力積(両足)'
   ];
+  const xAxisColumns = ['伸展（60deg/sec)','伸展（180deg/sec)','屈曲（60deg/sec)','屈曲（180deg/sec)'];
+  const yAxisColumns = ['跳躍高(片脚)','滞空時間(片脚)','減速局面力積(片脚)','推進局面力積(片脚)','減速局面力積(両足)','推進局面力積(両足)'];
+  const lsiVariables = ['伸展（180deg/sec)','屈曲（180deg/sec)','減速局面力積(片脚)','推進局面力積(片脚)','減速局面力積(両足)','推進局面力積(両足)'];
 
-  charts.scatter=new Chart(ctx,{type:'scatter',data:{datasets},
-    options:{responsive:true,maintainAspectRatio:false,
-      scales:{x:{title:{display:true,text:xCol}},y:{title:{display:true,text:yCol}}},
-      plugins:{legend:{display:false}, tooltip:{callbacks:{
-        title:(c)=>{const p=c[0].raw;return `選手${p.meta.ID} | ${p.meta.Side==='Non'?'健側':'患側'} | 術式: ${p.meta.Ope}`;},
-        label:(c)=>{const p=c.raw;return [`${xCol}: ${p.x.toFixed(2)}`,`${yCol}: ${p.y.toFixed(2)}`,`性別: ${p.meta.Gender==='M'?'男性':'女性'}`];}
-      }}}
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      initializeUI();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+    } catch (e) {
+      console.error(e);
+      const el = document.getElementById('loading');
+      if (el) el.innerHTML = '<div class="text-xl text-red-600">初期化中にエラー: ' + e.message + '</div>';
     }
-  );
+  });
 
-  // モバイル：タップで情報を固定表示
-  const canvasEl = document.getElementById('scatterChart');
-  canvasEl.onclick = (evt) => {
-    const points = charts.scatter.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
-    if (points.length) {
-      const first = points[0];
-      const ds = charts.scatter.data.datasets[first.datasetIndex];
-      const item = ds.data[first.index];
-      document.getElementById('hover-info').innerHTML = `
-        <div class="text-sm"><span class="font-semibold">選手${item.meta.ID}</span> / ${item.meta.Side==='Non'?'健側':'患側'} / 術式: ${item.meta.Ope}<br>
-        ${xCol}: <span class="font-semibold">${item.x.toFixed(2)}</span> / ${yCol}: <span class="font-semibold">${item.y.toFixed(2)}</span> / 性別: ${item.meta.Gender==='M'?'男性':'女性'}</div>`;
-    }
-  };
+  function showTab(e, tabName) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display='none');
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById(tabName + '-tab');
+    if (target) target.style.display = 'block';
+    if (e && e.currentTarget) e.currentTarget.classList.add('active');
+  }
 
-  const xValues=valid.map(r=>r[xCol]), yValues=valid.map(r=>r[yCol]);
-  const reg=calculateRegressionLine(xValues,yValues);
-  document.getElementById('correlation-stats').innerHTML=`
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-      <div><span class="font-semibold">相関係数 (r):</span> ${correlation.toFixed(3)}</div>
-      <div><span class="font-semibold">データ数:</span> ${valid.length}件</div>
-      ${reg?`<div><span class="font-semibold">回帰式:</span> y = ${reg.slope.toFixed(3)}x + ${reg.intercept.toFixed(3)}</div>`:''}
-    </div>`;
-}
+  function initializeUI() {
+    const select = document.getElementById('variable-select');
+    if (!select) throw new Error('variable-select が見つかりません');
+    numericColumns.forEach(col => { const o = document.createElement('option'); o.value = col; o.textContent = col; select.appendChild(o); });
 
-function calculateRegressionLine(x,y){const n=x.length;if(!n)return null;const sx=x.reduce((s,v)=>s+v,0), sy=y.reduce((s,v)=>s+v,0), sxy=x.reduce((s,v,i)=>s+v*y[i],0), sxx=x.reduce((s,v)=>s+v*v,0);const slope=(n*sxy-sx*sy)/(n*sxx-sx*sx);const intercept=(sy-slope*sx)/n;return {slope,intercept};}
+    // 初期値は厳密一致（存在しない場合は先頭を採用）
+    const initial = '伸展（180deg/sec)';
+    select.value = numericColumns.includes(initial) ? initial : numericColumns[0];
 
-function processLSIData(){
-  const ids=[...new Set(data.map(r=>r.ID))].sort();
-  const individual=ids.map(id=>{const h=data.find(r=>r.ID===id&&r.Side==='Non');const inj=data.find(r=>r.ID===id&&r.Side==='Injured');if(!h||!inj)return null;const o={patientId:id,gender:h.Gender};lsiVariables.forEach(v=>{const hv=h[v], iv=inj[v];o[v]=(typeof hv==='number'&&typeof iv==='number'&&hv!==0)?(iv/hv)*100:0;});return o;}).filter(Boolean);
-  const average={}; lsiVariables.forEach(v=>{const vals=individual.map(p=>p[v]).filter(x=>x>0);average[v]=vals.length?vals.reduce((s,v)=>s+v,0)/vals.length:0;});
-  return {individualLSIData:individual, averageLSI:average};
-}
+    updateHealthyInjuredChart();
+    createHeatmap();
+    updateLSIRadar();
+    createDataTable();
+  }
 
-function updateLSIRadar() {
-  const {individualLSIData,averageLSI}=processLSIData();
-  const ctx=document.getElementById('radarChart').getContext('2d');
-  if(charts.radar) charts.radar.destroy();
-  const labels=lsiVariables.map(v=>v.replace(/（/g,'(').replace(/）/g,')'));
-  const avg=lsiVariables.map(v=>averageLSI[v]);
-  const datasets=[];
-  individualLSIData.forEach(p=>{datasets.push({label:`選手${p.patientId}`,data:lsiVariables.map(v=>p[v]),borderColor:p.gender==='M'?'#93c5fd':'#fbb6ce',backgroundColor:p.gender==='M'?'rgba(147,197,253,0.1)':'rgba(251,182,206,0.1)',borderWidth:1,pointRadius:(window.innerWidth<640?1.5:2)});});
-  datasets.push({label:'全体平均',data:avg,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.2)',borderWidth:3,pointRadius:(window.innerWidth<640?3.5:6),pointBackgroundColor:'#ef4444'});
-  charts.radar=new Chart(ctx,{type:'radar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:true,min:0,max:150,ticks:{stepSize:30}}},plugins:{legend:{position:'bottom',labels:{filter:(li)=>li.text==='全体平均'}}}}});
-  const stats=document.getElementById('lsi-stats');
-  const male=individualLSIData.filter(p=>p.gender==='M').length, female=individualLSIData.filter(p=>p.gender==='F').length;
-  stats.innerHTML=`
-    <div>
-      <h4 class="text-base sm:text-lg font-semibold mb-2 sm:mb-3">全体平均LSI値</h4>
-      <div class="space-y-2">
-        ${lsiVariables.map(v=>{const val=averageLSI[v];const cls=val<90?'text-red-600':(val>110?'text-orange-600':'text-green-600');return `<div class="flex justify-between items-center p-2 bg-gray-50 rounded"><span class="text-xs sm:text-sm font-medium">${v.replace(/（/g,'(').replace(/）/g,')')}</span><span class="text-sm sm:text-base font-bold ${cls}">${val.toFixed(1)}%</span></div>`;}).join('')}
+  function processHealthyInjuredData(variable) {
+    const healthy = data.filter(r=>r.Side==='Non' && typeof r[variable]==='number');
+    const injured = data.filter(r=>r.Side==='Injured' && typeof r[variable]==='number');
+    if(!healthy.length || !injured.length) return {barData:[],healthyData:[],injuredData:[]};
+    const h=healthy.map(r=>r[variable]), i=injured.map(r=>r[variable]);
+    const hm=h.reduce((s,v)=>s+v,0)/h.length, im=i.reduce((s,v)=>s+v,0)/i.length;
+    const hs=Math.sqrt(h.reduce((s,v)=>s+Math.pow(v-hm,2),0)/h.length);
+    const is=Math.sqrt(i.reduce((s,v)=>s+Math.pow(v-im,2),0)/i.length);
+    return { barData:[{name:'健側',value:hm,error:hs},{name:'患側',value:im,error:is}], healthyData:healthy, injuredData:injured };
+  }
+
+  function updateHealthyInjuredChart() {
+    const variable=document.getElementById('variable-select').value;
+    const p=processHealthyInjuredData(variable);
+    const canvas = document.getElementById('healthyInjuredChart');
+    if (!canvas) return;
+    const ctx=canvas.getContext('2d');
+    if(charts.healthyInjured) charts.healthyInjured.destroy();
+    charts.healthyInjured=new Chart(ctx,{type:'bar',data:{
+      labels:p.barData.map(d=>d.name),
+      datasets:[{label:'平均値',data:p.barData.map(d=>d.value),backgroundColor:['#3b82f6','#ef4444'],borderColor:['#1e40af','#dc2626'],borderWidth:1}]
+    },options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}},plugins:{title:{display:true,text:variable+' 健患側比較'},legend:{display:false}}}});
+    const s=document.getElementById('healthyInjuredStats');
+    if (!s) return;
+    s.innerHTML=`
+      <div><h4 class="font-semibold mb-2">統計値</h4>
+        ${p.barData.map(item=>`
+          <div class="flex justify-between p-2 bg-gray-50 rounded mb-1">
+            <span>${item.name}:</span><span class="font-medium">${item.value.toFixed(2)} ± ${item.error.toFixed(2)}</span>
+          </div>`).join('')}
       </div>
-    </div>
-    <div>
-      <h4 class="text-base sm:text-lg font-semibold mb-2 sm:mb-3">凡例・基準値</h4>
-      <div class="space-y-3 text-xs sm:text-sm">
-        <div>
-          <div class="flex items-center space-x-2 mb-2"><div class="w-4 h-1 bg-red-500"></div><span class="font-medium">全体平均（太線）</span></div>
-          <div class="flex items-center space-x-2 mb-2"><div class="w-4 h-1 bg-blue-300"></div><span>男性各個人データ（青）</span></div>
-          <div class="flex items-center space-x-2 mb-2"><div class="w-4 h-1 bg-pink-300"></div><span>女性各個人データ（ピンク）</span></div>
+      <div><h4 class="font-semibold mb-2">データ詳細</h4>
+        <div class="p-2 bg-blue-50 rounded text-xs">
+          <p>健側データ数: ${p.healthyData.length}件</p>
+          <p>患側データ数: ${p.injuredData.length}件</p>
         </div>
-        <div class="mt-2">
-          <h5 class="text-xs sm:text-sm font-semibold mb-1 sm:mb-2">個人データ詳細</h5>
-          <div class="text-xs">
-            <p>対象者数: ${individualLSIData.length}名</p>
-            <p>男性: ${male}名 / 女性: ${female}名</p>
+      </div>`;
+  }
+
+  function calculateCorrelation(x,y){
+    const n=x.length;if(!n)return 0;
+    const mx=x.reduce((s,v)=>s+v,0)/n,my=y.reduce((s,v)=>s+v,0)/n;
+    const num=x.reduce((s,v,i)=>s+(v-mx)*(y[i]-my),0);
+    const den=Math.sqrt(x.reduce((s,v)=>s+Math.pow(v-mx,2),0)*y.reduce((s,v)=>s+Math.pow(v-my,2),0));
+    return den===0?0:num/den;
+  }
+
+  function createHeatmap(){
+    const container=document.getElementById('heatmap-container');
+    if(!container) return;
+    let html='<div class="inline-block">';
+    html+='<div class="flex"><div class="w-24 sm:w-32 flex items-center justify-center"><div class="text-[10px] sm:text-xs font-semibold text-gray-700 transform -rotate-90 whitespace-nowrap">CMJ関連データ (Y軸)</div></div><div>';
+    html+='<div class="flex mb-2"><div class="w-24 sm:w-32"></div>';
+    xAxisColumns.forEach(col=>{ html+=`<div class="w-[64px] sm:w-24 text-[10px] sm:text-xs font-medium text-center px-1">${col.replace(/（/g,'(').replace(/）/g,')')}</div>`; });
+    html+='</div>';
+    yAxisColumns.forEach(yCol=>{
+      html+='<div class="flex items-center">';
+      html+=`<div class="w-24 sm:w-32 text-[10px] sm:text-xs font-medium text-right pr-2">${yCol.replace(/（/g,'(').replace(/）/g,')')}</div>`;
+      xAxisColumns.forEach(xCol=>{
+        const valid=data.filter(r=>typeof r[xCol]==='number'&&typeof r[yCol]==='number'&&!isNaN(r[xCol])&&!isNaN(r[yCol]));
+        const vx=valid.map(r=>r[xCol]), vy=valid.map(r=>r[yCol]);
+        const r=calculateCorrelation(vx,vy);
+        const opacity=Math.min(0.85, Math.abs(r)*0.85), color=`rgba(239, 68, 68, ${opacity})`, textColor=Math.abs(r)>0.55?'white':'#111827';
+        html+=`<button class="heatmap-cell" style="background-color:${color};color:${textColor};" onclick="showScatterPlot('${xCol}','${yCol}',${r})" aria-label="${xCol} と ${yCol} の相関 ${r.toFixed(2)}">${r.toFixed(2)}</button>`;
+      });
+      html+='</div>';
+    });
+    html+='</div><div class="text-center mt-2"><div class="text-[10px] sm:text-xs font-semibold text-gray-700">筋力データ (X軸)</div></div></div>';
+    container.innerHTML=html;
+  }
+
+  function showScatterPlot(xCol,yCol,correlation){
+    selectedCorrelation={colX:xCol,colY:yCol,value:correlation};
+    const container = document.getElementById('scatterplot-container');
+    if (container) container.style.display='block';
+    const title = document.getElementById('scatterplot-title');
+    if (title) title.textContent=`散布図: ${xCol} vs ${yCol}`;
+    const valid=data.filter(r=>typeof r[xCol]==='number'&&typeof r[yCol]==='number'&&!isNaN(r[xCol])&&!isNaN(r[yCol]));
+    const canvas = document.getElementById('scatterChart');
+    if (!canvas) return;
+    const ctx=canvas.getContext('2d');
+    if(charts.scatter) charts.scatter.destroy();
+
+    const basePoint = (window.devicePixelRatio && window.innerWidth < 640) ? 4 : 6;
+    const datasets=[
+      {label:'男性・健側',data:valid.filter(r=>r.Gender==='M'&&r.Side==='Non').map(r=>({x:r[xCol],y:r[yCol],meta:r})),backgroundColor:'#3b82f6',pointRadius:basePoint},
+      {label:'男性・患側',data:valid.filter(r=>r.Gender==='M'&&r.Side==='Injured').map(r=>({x:r[xCol],y:r[yCol],meta:r})),backgroundColor:'#f59e0b',pointRadius:basePoint},
+      {label:'女性・健側',data:valid.filter(r=>r.Gender==='F'&&r.Side==='Non').map(r=>({x:r[xCol],y:r[yCol],meta:r})),backgroundColor:'#10b981',pointRadius:basePoint},
+      {label:'女性・患側',data:valid.filter(r=>r.Gender==='F'&&r.Side==='Injured').map(r=>({x:r[xCol],y:r[yCol],meta:r})),backgroundColor:'#ef4444',pointRadius:basePoint}
+    ];
+
+    charts.scatter=new Chart(ctx,{type:'scatter',data:{datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        scales:{x:{title:{display:true,text:xCol}},y:{title:{display:true,text:yCol}}},
+        plugins:{legend:{display:false}, tooltip:{callbacks:{
+          title:(c)=>{const p=c[0].raw;return `選手${p.meta.ID} | ${p.meta.Side==='Non'?'健側':'患側'} | 術式: ${p.meta.Ope}`;},
+          label:(c)=>{const p=c.raw;return [`${xCol}: ${p.x.toFixed(2)}`,`${yCol}: ${p.y.toFixed(2)}`,`性別: ${p.meta.Gender==='M'?'男性':'女性'}`];}
+        }}}
+      }
+    );
+
+    const canvasEl = canvas;
+    canvasEl.onclick = (evt) => {
+      const points = charts.scatter.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+      if (points.length) {
+        const first = points[0];
+        const ds = charts.scatter.data.datasets[first.datasetIndex];
+        const item = ds.data[first.index];
+        const hover = document.getElementById('hover-info');
+        if (hover) {
+          hover.innerHTML = `
+            <div class="text-sm"><span class="font-semibold">選手${item.meta.ID}</span> / ${item.meta.Side==='Non'?'健側':'患側'} / 術式: ${item.meta.Ope}<br>
+            ${xCol}: <span class="font-semibold">${item.x.toFixed(2)}</span> / ${yCol}: <span class="font-semibold">${item.y.toFixed(2)}</span> / 性別: ${item.meta.Gender==='M'?'男性':'女性'}</div>`;
+        }
+      }
+    };
+
+    const xValues=valid.map(r=>r[xCol]), yValues=valid.map(r=>r[yCol]);
+    const reg=calculateRegressionLine(xValues,yValues);
+    const stats = document.getElementById('correlation-stats');
+    if (stats) {
+      stats.innerHTML=`
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div><span class="font-semibold">相関係数 (r):</span> ${correlation.toFixed(3)}</div>
+          <div><span class="font-semibold">データ数:</span> ${valid.length}件</div>
+          ${reg?`<div><span class="font-semibold">回帰式:</span> y = ${reg.slope.toFixed(3)}x + ${reg.intercept.toFixed(3)}</div>`:''}
+        </div>`;
+    }
+  }
+
+  function calculateRegressionLine(x,y){
+    const n=x.length;if(!n) return null;
+    const sx=x.reduce((s,v)=>s+v,0), sy=y.reduce((s,v)=>s+v,0), sxy=x.reduce((s,v,i)=>s+v*y[i],0), sxx=x.reduce((s,v)=>s+v*v,0);
+    const denom=(n*sxx - sx*sx);
+    if (denom === 0) return null; // 0除算ガード
+    const slope=(n*sxy-sx*sy)/denom;
+    const intercept=(sy-slope*sx)/n;
+    if (!isFinite(slope) || !isFinite(intercept)) return null;
+    return {slope,intercept};
+  }
+
+  function processLSIData(){
+    const ids=[...new Set(data.map(r=>r.ID))].sort();
+    const individual=ids.map(id=>{
+      const h=data.find(r=>r.ID===id&&r.Side==='Non');
+      const inj=data.find(r=>r.ID===id&&r.Side==='Injured');
+      if(!h||!inj) return null;
+      const o={patientId:id,gender:h.Gender};
+      lsiVariables.forEach(v=>{
+        const hv=h[v], iv=inj[v];
+        o[v]=(typeof hv==='number'&&typeof iv==='number'&&hv!==0)?(iv/hv)*100:0;
+      });
+      return o;
+    }).filter(Boolean);
+    const average={}; lsiVariables.forEach(v=>{const vals=individual.map(p=>p[v]).filter(x=>x>0);average[v]=vals.length?vals.reduce((s,v)=>s+v,0)/vals.length:0;});
+    return {individualLSIData:individual, averageLSI:average};
+  }
+
+  function updateLSIRadar() {
+    const {individualLSIData,averageLSI}=processLSIData();
+    const canvas = document.getElementById('radarChart');
+    if (!canvas) return;
+    const ctx=canvas.getContext('2d');
+    if(charts.radar) charts.radar.destroy();
+    const labels=lsiVariables.map(v=>v.replace(/（/g,'(').replace(/）/g,')'));
+    const avg=lsiVariables.map(v=>averageLSI[v]);
+    const datasets=[];
+    individualLSIData.forEach(p=>{
+      datasets.push({
+        label:`選手${p.patientId}`,
+        data:lsiVariables.map(v=>p[v]),
+        borderColor:p.gender==='M'?'#93c5fd':'#fbb6ce',
+        backgroundColor:p.gender==='M'?'rgba(147,197,253,0.1)':'rgba(251,182,206,0.1)',
+        borderWidth:1,
+        pointRadius:(window.innerWidth<640?1.5:2)
+      });
+    });
+    datasets.push({label:'全体平均',data:avg,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.2)',borderWidth:3,pointRadius:(window.innerWidth<640?3.5:6),pointBackgroundColor:'#ef4444'});
+    charts.radar=new Chart(ctx,{type:'radar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:true,min:0,max:150,ticks:{stepSize:30}}},plugins:{legend:{position:'bottom',labels:{filter:(li)=>li.text==='全体平均'}}}}});
+    const stats=document.getElementById('lsi-stats');
+    if (!stats) return;
+    const male=individualLSIData.filter(p=>p.gender==='M').length, female=individualLSIData.filter(p=>p.gender==='F').length;
+    stats.innerHTML=`
+      <div>
+        <h4 class="text-base sm:text-lg font-semibold mb-2 sm:mb-3">全体平均LSI値</h4>
+        <div class="space-y-2">
+          ${lsiVariables.map(v=>{const val=averageLSI[v];const cls=val<90?'text-red-600':(val>110?'text-orange-600':'text-green-600');return `<div class="flex justify-between items-center p-2 bg-gray-50 rounded"><span class="text-xs sm:text-sm font-medium">${v.replace(/（/g,'(').replace(/）/g,')')}</span><span class="text-sm sm:text-base font-bold ${cls}">${val.toFixed(1)}%</span></div>`;}).join('')}
+        </div>
+      </div>
+      <div>
+        <h4 class="text-base sm:text-lg font-semibold mb-2 sm:mb-3">凡例・基準値</h4>
+        <div class="space-y-3 text-xs sm:text-sm">
+          <div>
+            <div class="flex items-center space-x-2 mb-2"><div class="w-4 h-1 bg-red-500"></div><span class="font-medium">全体平均（太線）</span></div>
+            <div class="flex items-center space-x-2 mb-2"><div class="w-4 h-1 bg-blue-300"></div><span>男性各個人データ（青）</span></div>
+            <div class="flex items-center space-x-2 mb-2"><div class="w-4 h-1 bg-pink-300"></div><span>女性各個人データ（ピンク）</span></div>
+          </div>
+          <div class="mt-2">
+            <h5 class="text-xs sm:text-sm font-semibold mb-1 sm:mb-2">個人データ詳細</h5>
+            <div class="text-xs">
+              <p>対象者数: ${individualLSIData.length}名</p>
+              <p>男性: ${male}名 / 女性: ${female}名</p>
+            </div>
           </div>
         </div>
-      </div>
-    </div>`;
-}
+      </div>`;
+  }
 
-function createDataTable(){
-  const ids=[...new Set(data.map(r=>r.ID))].sort();
-  const rows=ids.map(id=>{const h=data.find(r=>r.ID===id&&r.Side==='Non');const inj=data.find(r=>r.ID===id&&r.Side==='Injured');if(!h||!inj)return null;const obj={id,gender:h.Gender,ope:h.Ope,competition:h.Competition,variables:{}};numericColumns.forEach(v=>{const hv=h[v]||0, iv=inj[v]||0;const l=(typeof hv==='number'&&typeof iv==='number'&&hv!==0)?(iv/hv)*100:0;obj.variables[v]={healthy:hv,injured:iv,lsi:l};});return obj;}).filter(Boolean);
-  let html='<table class="min-w-full border-collapse border border-gray-200 sticky-first text-[12px] sm:text-sm">';
-  html+='<thead><tr class="bg-gray-100">';
-  html+='<th class="border border-gray-200 px-2 py-2 text-center font-semibold min-w-[80px]">選手ID</th>';
-  html+='<th class="border border-gray-200 px-2 py-2 text-center font-semibold min-w-[80px]">性別</th>';
-  html+='<th class="border border-gray-200 px-2 py-2 text-center font-semibold">術式</th>';
-  html+='<th class="border border-gray-200 px-2 py-2 text-center font-semibold">競技</th>';
-  numericColumns.forEach(v=>{html+=`<th class="border border-gray-200 px-2 py-2 text-center font-semibold min-w-[120px]">${v.replace(/（/g,'(').replace(/）/g,')')}</th>`;});
-  html+='</tr></thead><tbody>';
-  rows.forEach((p,i)=>{
-    const bg=i%2===0?'bg-white':'bg-gray-50';
-    html+=`<tr class="${bg}">`;
-    html+=`<td class="border border-gray-200 px-2 py-2 text-center font-medium">${p.id}</td>`;
-    html+=`<td class="border border-gray-200 px-2 py-2 text-center">${p.gender==='M'?'男性':'女性'}</td>`;
-    html+=`<td class="border border-gray-200 px-2 py-2 text-center text-[11px] sm:text-xs">${p.ope}</td>`;
-    html+=`<td class="border border-gray-200 px-2 py-2 text-center text-[11px] sm:text-xs">${p.competition}</td>`;
-    numericColumns.forEach(v=>{const d=p.variables[v];const cls=d.lsi<90?'text-red-700 bg-red-100':(d.lsi>110?'text-orange-700 bg-orange-100':'text-green-700 bg-green-100');
-      html+=`<td class="border border-gray-200 px-1 py-1 text-center">
-        <div class="space-y-1">
-          <div class="text-[11px] sm:text-xs text-blue-600">健: ${Number(d.healthy).toFixed(2)}</div>
-          <div class="text-[11px] sm:text-xs text-red-600">患: ${Number(d.injured).toFixed(2)}</div>
-          <div class="text-[11px] sm:text-xs font-semibold ${cls} px-1 rounded">LSI: ${Number(d.lsi).toFixed(0)}%</div>
-        </div>
-      </td>`;
+  function createDataTable(){
+    const ids=[...new Set(data.map(r=>r.ID))].sort();
+    const rows=ids.map(id=>{
+      const h=data.find(r=>r.ID===id&&r.Side==='Non');
+      const inj=data.find(r=>r.ID===id&&r.Side==='Injured');
+      if(!h||!inj) return null;
+      const obj={id,gender:h.Gender,ope:h.Ope,competition:h.Competition,variables:{}};
+      numericColumns.forEach(v=>{
+        const hv=h[v]??0, iv=inj[v]??0;
+        const l=(typeof hv==='number'&&typeof iv==='number'&&hv!==0)?(iv/hv)*100:0;
+        obj.variables[v]={healthy:hv,injured:iv,lsi:l};
+      });
+      return obj;
+    }).filter(Boolean);
+
+    let html='<table class="min-w-full border-collapse border border-gray-200 sticky-first text-[12px] sm:text-sm">';
+    html+='<thead><tr class="bg-gray-100">';
+    html+='<th class="border border-gray-200 px-2 py-2 text-center font-semibold min-w-[80px]">選手ID</th>';
+    html+='<th class="border border-gray-200 px-2 py-2 text-center font-semibold min-w-[80px]">性別</th>';
+    html+='<th class="border border-gray-200 px-2 py-2 text-center font-semibold">術式</th>';
+    html+='<th class="border border-gray-200 px-2 py-2 text-center font-semibold">競技</th>';
+    numericColumns.forEach(v=>{html+=`<th class="border border-gray-200 px-2 py-2 text-center font-semibold min-w-[120px]">${v.replace(/（/g,'(').replace(/）/g,')')}</th>`;});
+    html+='</tr></thead><tbody>';
+    rows.forEach((p,i)=>{
+      const bg=i%2===0?'bg-white':'bg-gray-50';
+      html+=`<tr class="${bg}">`;
+      html+=`<td class="border border-gray-200 px-2 py-2 text-center font-medium">${p.id}</td>`;
+      html+=`<td class="border border-gray-200 px-2 py-2 text-center">${p.gender==='M'?'男性':'女性'}</td>`;
+      html+=`<td class="border border-gray-200 px-2 py-2 text-center text-[11px] sm:text-xs">${p.ope}</td>`;
+      html+=`<td class="border border-gray-200 px-2 py-2 text-center text-[11px] sm:text-xs">${p.competition}</td>`;
+      numericColumns.forEach(v=>{
+        const d=p.variables[v];
+        const cls=d.lsi<90?'text-red-700 bg-red-100':(d.lsi>110?'text-orange-700 bg-orange-100':'text-green-700 bg-green-100');
+        html+=`<td class="border border-gray-200 px-1 py-1 text-center">
+          <div class="space-y-1">
+            <div class="text-[11px] sm:text-xs text-blue-600">健: ${Number(d.healthy).toFixed(2)}</div>
+            <div class="text-[11px] sm:text-xs text-red-600">患: ${Number(d.injured).toFixed(2)}</div>
+            <div class="text-[11px] sm:text-xs font-semibold ${cls} px-1 rounded">LSI: ${Number(d.lsi).toFixed(0)}%</div>
+          </div>
+        </td>`;
+      });
+      html+='</tr>';
     });
-    html+='</tr>';
-  });
-  html+='</tbody></table>';
-  document.getElementById('data-table').innerHTML=html;
-  const male=rows.filter(p=>p.gender==='M').length, female=rows.filter(p=>p.gender==='F').length;
-  document.getElementById('table-summary').innerHTML=`<p class="text-gray-700 text-xs">対象者数: ${rows.length}名<br/>男性: ${male}名 / 女性: ${female}名</p>`;
-}
-</script>
+    html+='</tbody></table>';
+    const tableDiv = document.getElementById('data-table');
+    if (tableDiv) tableDiv.innerHTML=html;
+    const male=rows.filter(p=>p.gender==='M').length, female=rows.filter(p=>p.gender==='F').length;
+    const summary = document.getElementById('table-summary');
+    if (summary) summary.innerHTML=`<p class="text-gray-700 text-xs">対象者数: ${rows.length}名<br/>男性: ${male}名 / 女性: ${female}名</p>`;
+  }
+  </script>
 </body>
 </html>
